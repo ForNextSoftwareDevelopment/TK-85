@@ -1,1 +1,176 @@
+<Introduction>
+
+This is an assembler/disassembler for the Intel-8085 microprocessor.
+It can also simulate an NEC TK-85 developers board (keyboard/display).
+
+<Operations>
+
+After loading a source file into the main window you can debug (assemble) it with the debugger button.
+If the checkbox 'Insert Monitor Program on Debug' is checked it will also insert the monitor program (after assembly of the user program) at 0x0000 to 0x0800.
+Remember that this monitor program has a little change to the source code: 
+the DELAY constant is 0 in stead of 71
+the MSEC9 constant is 1 in stead of 14
+This to prevent a long waiting delay for the keyboard to respond (the delay is used to avoid key bouncing).
+
+If the code doesn't start with an ORG directive the startaddress is set to 0000H.
+The first error it encounters will be highlighted in light red.
+Ajustments can be made in the main window (don't forget to save).
+If no errors were encountered, the simulator is ready to run (or step) through the program and the first instruction to be executed will be highlighted in light green.
+
+Running will be with a delay of 50 ms between instructions (this can be adjusted in the main screen).
+
+Setting the program counter to a specific address can be done by entering this address in the the 'set program counter' textbox and close with an enter. 
+
+At any time the memory and ports can be viewed in the right windows.
+The memory window will follow the next instruction to be executed, this can be prevented with the 'Lock' checkbox.
+The memory window can be easily set to the program counter or stack pointer with the designated buttons.
+
+On the left all registers of the 8085 are shown.
+Also the flags (including the undocumented ones, K(X5) and V) are displayed. 
+
+Above the memory window the interrupt register is shown.
+Also the IE bit in this register is shown as a green (Enabled) or red (Disabled) label.
+
+With the checkbox 'TK-85' a keyboard/display of a TK-85 can be shown/hidden.
+This will simulate the TK-85.
+On the keyboard the key turns red after pressing it and stays that way until it is pressed again.
+This way you can wait until the keys is handled by the program.
+Remember to change the DELAY constant in de monitor source code (if you use that), setting it to 1 to prevent a long waiting time in the use of the keyboard. 
+Only the 'RESET' key and 'MON' key will act directly as an interrupt in the running program.
+
+The status of the SID en SOD lines of the 8085 processor are visible as red/green leds.
+Also a graphical representation is visible, timing is in micro seconds based on a 6.144 MHz crystal which makes a 3.072 MHz machine clock cycle.
+Toggling of the SOD line is posible by left clicking the led (if the assembler is active). 
+
+A terminal screen is available to code typed data onto the SID line and decode data from the SOD line.
+Remember that if the terminal screen is active on start of the monitor program the display/keyboard will be disabled (because the SID line is high, you could put it manually to low).
+
+A program can be exported to a (cassette tape) audio file (wav) with File->Export.
+This will be according to the 'AP-29 Application Note', using a 3 kHz signal.
+ 
+A program can be imported from an audio file (wav) with File->Import.
+This will be according to the 'AP-29 Application Note', with an arbitrary signal frequency.
+
+The two versions of the monitor program of the TK-85 have been provided in the folder 'Monitor'.
+Slight adjustments have been made to account for some of the directives used (e.g IF ENDIF and >>).
+Also the source code of the 'AP-29 Application Note' has been provided.
+
+<Assembler>
+
+The assembler can use all of the instructions of the 8085 processor including the undocumented instructions.
+All instructions are implemented by buttons on the left of the screen for reference and/or inserting the selected instruction into the program.
+Numbers should be denoted in decimal, hexadecimal (0x00, $00 or 00H style) or binary (10101010B style).
+
+The following directives can be used (example on next row(s)):
+
+`ASEG` Use the location counter for the absolute program segment
+`CSEG` Use the location counter for the code program segment
+`DSEG` Use the location counter for the data program segment
+Followed by and 'ORG' directive the assembler will set the segemnt to this address
+
+`ORG address` Set locationcounter to this address (while assembling)
+ORG 0000H
+
+`LABEL EQU constant` Assignement of a constant
+DSPLY EQU 1800H 
+
+`$` Current location counter (while assembling)
+NUMC EQU $ - CMDTB ; NUMBER OF COMMANDS 
+
+`[LABEL] DB value` Reserving a (number of) byte(s) (with or without label), strings in double quotes will be terminated by a zero
+STRING DB "TK-85"
+CHARARRAY DB 'TK-85'
+AT DB '@', 00H
+DB 00H, 01H, 02H
+DB 'A', 'B', 'C'
+
+`[LABEL] DW value` Reserving a word (with or without label)
+DW 0000H
+CMDAD: 
+        DW      SSTEP   ; ADDRESS OF SINGLE STEP ROUTINE 
+        DW      EXAM    ; ADDRESS OF EXAMINE REGISTERS ROUTINE 
+        DW      SUBST   ; ADDRESS OF SUBSTITUTE MEMORY ROUTINE 
+        DW      GOCMD   ; ADDRESS OF GO ROUTINE 
+
+`[LABEL] DS number` Reserving 'number' of bytes  
+
+`LOW([LABEL])` will give the low byte of 2 bytes (usually an address) 
+`HIGH([LABEL])` will give the high byte of 2 bytes (usually an address) 
+
+`Arithmetic` e.g. +1, -2, *4, /2 
+USRBR EQU RAMST + 256 - (RMUSE + SKLN + UBRLN)
+
+`Logical` AND, OR 
+FLAG & 01H
+FLAG | 80H
+
+<DisAssembler>
+
+The disassembler will follow all possible paths from an entry address.
+Additional paths can be provided.
+As an option labels can be inserted for jump and call addresses.
+
+<Menu>
+
+`File->New` 
+
+Delete source file and reset simulator
+
+`File->Open` 
+
+Load a new source file
+
+`File->Import` 
+
+Import an audio file with a format according to the 'AP-29 Application Note'
+
+`File->Export` 
+
+Export to an audio file with a format according to the 'AP-29 Application Note'
+
+`File->Save` 
+
+Save the current source file
+
+`File->Save As`
+
+Save the current source file under a given name
+ 
+`File->Save Binary`
+
+Save the binary from assembling the current source
+
+`File->Quit`
+
+Quit program
+
+`Reset->Reset RAM`
+
+Clear RAM
+
+`Reset->Reset Ports`
+
+Clear Ports
+
+`Reset->Reset Simulator`
+
+Clear RAM, Ports, Registers, Flags
+
+`DisAssembler->Open Binary`
+
+Open a binary file for disassembly
+
+`Help->Manual` 
+
+Show this manual
+
+`Help->About`
+
+Show program info
+
+-----------------------------------------------------
+Please report any bugs you encounter,
+Dirk
+info@fornext.nl 
+
 
